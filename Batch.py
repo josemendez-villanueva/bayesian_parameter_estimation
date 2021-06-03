@@ -15,7 +15,7 @@ def batchnoise():
         b.batchLabel = 'noise_analysis'
         b.saveFolder = 'noise_data'
         b.method = 'grid'
-        b.runCfg = {'type': 'mpi',
+        b.runCfg = {'type': 'mpi_bulletin',
                                 'script': 'init.py',
                                 'skip': True}
 
