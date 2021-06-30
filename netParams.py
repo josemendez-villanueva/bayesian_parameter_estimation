@@ -27,7 +27,5 @@ netParams.synMechParams['exc'] = {'mod': 'Exp2Syn', 'tau1': 0.1, 'tau2': 5.0, 'e
 
 # Now to create Background Noise and the target for it
 
-netParams.stimSourceParams['background'] = {'type': 'NetStim', 'rate': 10, 'noise': cfg.noise}
+netParams.stimSourceParams['background'] = {'type': 'NetStim', 'rate': 10}
 netParams.stimTargetParams['background->Pop'] = {'source': 'background', 'conds': {'cellType': 'PYR'}, 'weight': 0.03, 'delay': 10, 'synMech': 'exc'}
-
-
