@@ -5,6 +5,7 @@ from netpyne import specs, sim
 from numpy.core.arrayprint import StructuredVoidFormat
 from numpy.lib.function_base import sinc
 import sim_single_cell
+import matplotlib as plt
 
 
 #Might need to get the spikes or etc....
@@ -43,7 +44,9 @@ def simulator(params):
 
 # params = [[.2],[.3],[.9]]
 # simulator(params)
-
+#instead of returning spike times might need to return plot traces instead and times... make sure to take out the for loop in terms of simulations run... will
+#will not need this for actual optimization runs
+#Nonetype needs to be checked so simulation can run and make sure that Delfi can accurately run it
 
 
 # this class will be using the delfi wrapper
@@ -52,7 +55,7 @@ class single_cell(BaseSimulator):
 
     def __init__(self, seed = None):
 
-        dim_param = 3 #this is the dimension of the params np array
+        dim_param = 1  #this is the dimension of the params np array
         super().__init__(dim_param = dim_param, seed = seed)
         self.netpynesimulation = simulator
 
@@ -60,7 +63,6 @@ class single_cell(BaseSimulator):
         params = np.asarray(params)
         assert params.ndim == 1 #checking dimension is only taking in one set of parameters to be evaulated
         states = self.netpynesimulation(params)
-
         return {"data" : states}
 
 # #From the above need to make sure that states is giving the  correct data that we need ot else will have to manually export
@@ -70,12 +72,11 @@ seed_p = 1
 
 # #The following will be the Prior Dist
 # #Using uniform distribution for one variable
-prior_min = [.2]
-prior_max = [5]
+prior_min = np.array([.2])
+prior_max = np.array([5])
 
 prior = dd.Uniform(lower = prior_min, upper = prior_max, seed = seed_p)
 
-# #Don't need to create a summary statistics class due to netpyne recording number of spikes, times, and the rest should be easily found if needed
 # #Now to create teh generator class
 
 import delfi.generator as dg
@@ -90,11 +91,14 @@ g = dg.Default(model = m, prior = prior, summary = s)
 
 # #defining a baseline and its statistics... will be needed later
 
-t_params = np.array([.4]) #Denoting this one as the "real" parameter
+t_params = np.array([.5]) #Denoting this one as the "real" parameter
 t_param_name = ['noise']
 
 obs = m.single_parameter(t_params)
 obs_stats = s.calc([obs])
+
+print(g)
+print(obs)
 
 # #Hyper-parameters/inference set up here
 
@@ -131,8 +135,13 @@ density = 'maf'
 n_mades = 5
 
 import delfi.inference as infer
+#
+
+#Fixed the environemtn issues.. needed to install certain g++ tools and install conda/set up pathways in order to make it run
+
 # inference object
 
+# Error is being generated here
 res = infer.SNPEC(g,
                 obs=obs_stats,
                 n_hiddens=n_hiddens,
@@ -144,7 +153,7 @@ res = infer.SNPEC(g,
 
 
 
-loglik, _, posterior = res.run(
+log, _, posterior = res.run(
                     n_train=n_train,
                     n_rounds=n_rounds,
                     minibatch=minibatch,
@@ -153,6 +162,14 @@ loglik, _, posterior = res.run(
                     proposal='prior',
                     val_frac=val_frac,
                     verbose=True,)
+
+
+#plotting of the loss function
+fig = plt.figure(figsize=(15,5))
+
+plt.plot(log[0]['loss'],lw=2)
+plt.xlabel('iteration')
+plt.ylabel('loss');
 
 
 
