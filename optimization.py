@@ -12,10 +12,10 @@ from sbi.inference.base import infer
 def simulator(params):
     params = np.asarray(params)
 
-    sim_single_cell.netParams.stimSourceParams['background']['noise'] = params[0]
-    sim_single_cell.netParams.connParams['P1 -> P2']['probability'] = params[1]
-    sim_single_cell.netParams.connParams['P1 -> P2']['weight'] = params[2]
-    sim_single_cell.netParams.connParams['P1 -> P2']['delay'] =params[3]
+    # sim_single_cell.netParams.stimSourceParams['background']['noise'] = params[0]
+    sim_single_cell.netParams.connParams['P1 -> P2']['probability'] = params[0]
+    sim_single_cell.netParams.connParams['P1 -> P2']['weight'] = params[1]
+    sim_single_cell.netParams.connParams['P1 -> P2']['delay'] =params[2]
 
     """
     Way to simulate this without always running it with the displays?
@@ -38,7 +38,7 @@ def simulation_wrapper(params):
     return summstats
 
 #Ground Truth Parameters
-baseline_param = np.array([.2, 0.2, 0.025, 2])
+baseline_param = np.array([0.2, 0.025, 2])
 baseline_simulator = simulator(baseline_param)
 observable_baseline_stats = torch.as_tensor(baseline_simulator['stats'])
 
@@ -46,14 +46,14 @@ observable_baseline_stats = torch.as_tensor(baseline_simulator['stats'])
 #Inference
 
 
-prior_min = np.array([0, 0.01, 0.001, 1])
-prior_max = np.array([2, 0.5, 0.1, 20])
+prior_min = np.array([0.01, 0.001, 1])
+prior_max = np.array([0.5, 0.1, 20])
 
 prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), 
                                     high=torch.as_tensor(prior_max))
 
 posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                  num_simulations=5, num_workers=4)
+                  num_simulations=5000, num_workers=16)
 
 
 samples = posterior.sample((10000,),
@@ -68,26 +68,27 @@ posterior_sample = posterior.sample((1,),
 
 #Plot Observed and Posterior
 x = simulator(posterior_sample[0])
+t = baseline_simulator['time']
+print(posterior_sample[0])
 
-fig = plt.figure(1, figsize=(12,10))
+plt.figure(1, figsize=(12,10))
 
-gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
-ax = plt.subplot(gs[0])
+# gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
+# ax = plt.subplot(gs[0])
 
 #x is simulation of Posterior
-t = baseline_simulator['time']
+
 
 plt.plot(t, baseline_simulator['traces'], '-r' ,lw=2, label='observation')
 plt.plot(t, x['traces'], '--', lw=2, label='posterior sample')
-
 plt.xlabel('time (ms)')
 plt.ylabel('voltage (mV)')
 
-ax = plt.gca()
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
-          loc='upper right')
-
-plt.legend()
 plt.show()
+# ax = plt.gca()
+# handles, labels = ax.get_legend_handles_labels()
+# ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
+#           loc='upper right')
+
+
 

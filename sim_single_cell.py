@@ -21,7 +21,7 @@ netParams.popParams['P2'] = {'cellType': 'PYR', 'numCells': 20, 'cellModel': 'HH
 
 netParams.synMechParams['exc'] = {'mod': 'Exp2Syn', 'tau1': 0.1, 'tau2': 5.0, 'e': 0}
 
-netParams.stimSourceParams['background'] = {'type': 'NetStim', 'rate': 10, 'noise': 0} #This noise is just a dummy variable
+netParams.stimSourceParams['background'] = {'type': 'NetStim', 'rate': 10, 'noise': 0.5} #This noise is just a dummy variable
 netParams.stimTargetParams['background->Pop'] = {'source': 'background', 'conds': {'cellType': 'PYR'}, 'weight': 0.03, 'delay': 10, 'synMech': 'exc'}
 
 netParams.connParams['P1 -> P2'] = {
