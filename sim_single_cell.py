@@ -38,12 +38,12 @@ cfg.recordTraces = {'V_soma':{'sec':'soma','loc':0.5,'var':'v'}}  # Dict with tr
 cfg.recordStep = 0.1        # Step size in ms to save data (eg. V traces, LFP, etc      
 cfg.saveFolder = 'output_folder'
 cfg.filename = 'output'
-cfg.saveDataInclude = ['simData']
+cfg.saveDataInclude = ['simData', 'simConfig', 'netParams', 'net']
 cfg.saveJson = True
 cfg.printPopAvgRates = True
 
 
 cfg.analysis['plotTraces'] = {'include': [0], 'saveFig': True}  # Plot recorded traces for this list of cells
 
-
-# sim.createSimulateAnalyze(netParams = netParams, simConfig = cfg)
+def run():
+    sim.createSimulateAnalyze(netParams = netParams, simConfig = cfg)

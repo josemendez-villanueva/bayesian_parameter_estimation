@@ -1,177 +1,88 @@
-from os import stat
-from delfi.simulator.BaseSimulator import BaseSimulator
+import torch 
 import numpy as np
-from netpyne import specs, sim
-from numpy.core.arrayprint import StructuredVoidFormat
-from numpy.lib.function_base import sinc
+from netpyne import sim
 import sim_single_cell
-import matplotlib as plt
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from sbi import utils as utils
+from sbi import analysis as analysis
+from sbi.inference.base import infer
 
-
-#Might need to get the spikes or etc....
+#NetPyNE simulator
 def simulator(params):
-    #parameters that you want to test
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    params = np.array(params)
-    num_params = len(params) # changed this from params[:,0] since of the way that params is set up.....
+    params = np.asarray(params)
 
-    #for loop to connect the above paramters into your simulation and instantiate it
+    sim_single_cell.netParams.stimSourceParams['background']['noise'] = params
+    """
+    Way to simulate this without always running it with the displays?
+     
+    Need to see if there is an alternative to create simulations
+    """
+    # sim.createSimulateAnalyze(netParams = sim_single_cell.netParams, simConfig = sim_single_cell.cfg)
+    sim_single_cell.run()
 
-    #instantiate first simulation which is a guarantee to have your n set up to give spike time results back
-
-    sim_single_cell.netParams.stimSourceParams['background']['noise'] = params[0]
-    sim_single_cell.cfg.filename = 'output' + str(0)    
-    sim.createSimulateAnalyze(netParams = sim_single_cell.netParams, simConfig = sim_single_cell.cfg) 
-
-    n = len(sim.simData['spkt'])
-    sim_samples = np.zeros((num_params, n))
-
-    # one issue that can arise is if there are different n's per simulation.... will focus on that later on...
-    # Have to re-run for zero in order to put into the dictionary until I can find where to pull simData from with netPyNE functionality
-    # Do not want to have to open a json file and search through that is why I am just doing it from the simulations that are generated in file
-    for i in range(0, len(params)):
-        sim_single_cell.netParams.stimSourceParams['background']['noise'] = params[i]
-        sim_single_cell.cfg.filename = 'output' + str(i)    
-        sim.createSimulateAnalyze(netParams = sim_single_cell.netParams, simConfig = sim_single_cell.cfg)  
-        for j in range(n):   
-            spikes = float((sim.simData['spkt'][j]))
-            sim_samples[i][j] = spikes
-            #Might need to return a histogram in order to make this run better or just return the time steps as well 
-
-    print(sim_samples)
-    return sim_samples
-  
-
-# params = [[.2],[.3],[.9]]
-# simulator(params)
-#instead of returning spike times might need to return plot traces instead and times... make sure to take out the for loop in terms of simulations run... will
-#will not need this for actual optimization runs
-#Nonetype needs to be checked so simulation can run and make sure that Delfi can accurately run it
+    spiketimes = np.array(sim.simData['spkt'])
+    plotraces = np.array(sim.simData['V_soma']['cell_0'])
+    time = np.array(sim.simData['t'])
+    hist = np.histogram(spiketimes, int(sim_single_cell.cfg.duration))[0] #replaces the need for a summary statistics class/fitness function class
+    return dict(stats = hist, time = time, traces = plotraces)
 
 
-# this class will be using the delfi wrapper
+def simulation_wrapper(params):
+    obs = simulator(params)
+    summstats = torch.as_tensor(obs['stats'])
+    return summstats
 
-class single_cell(BaseSimulator):
+#Ground Truth Parameters
+baseline_param = np.array([.8])
+baseline_simulator = simulator(baseline_param)
+observable_baseline_stats = torch.as_tensor(baseline_simulator['stats'])
 
-    def __init__(self, seed = None):
 
-        dim_param = 1  #this is the dimension of the params np array
-        super().__init__(dim_param = dim_param, seed = seed)
-        self.netpynesimulation = simulator
+#Inference
 
-    def single_parameter(self, params):
-        params = np.asarray(params)
-        assert params.ndim == 1 #checking dimension is only taking in one set of parameters to be evaulated
-        states = self.netpynesimulation(params)
-        return {"data" : states}
+prior_min = np.array([0])
+prior_max = np.array([2])
 
-# #From the above need to make sure that states is giving the  correct data that we need ot else will have to manually export
-import delfi.distribution as dd
+prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), 
+                                    high=torch.as_tensor(prior_max))
 
-seed_p = 1
+posterior = infer(simulation_wrapper, prior, method='SNPE', 
+                  num_simulations=1000, num_workers=4)
 
-# #The following will be the Prior Dist
-# #Using uniform distribution for one variable
-prior_min = np.array([.2])
-prior_max = np.array([5])
 
-prior = dd.Uniform(lower = prior_min, upper = prior_max, seed = seed_p)
+samples = posterior.sample((10000,),
+                            x = observable_baseline_stats)
 
-# #Now to create teh generator class
 
-import delfi.generator as dg
-from delfi.summarystats import Identity
-
-m = single_cell()
-s = Identity()
-
-# #Before implementing the below, you need to have your simulator, prior, and summary statistic done
-
-g = dg.Default(model = m, prior = prior, summary = s)
-
-# #defining a baseline and its statistics... will be needed later
-
-t_params = np.array([.5]) #Denoting this one as the "real" parameter
-t_param_name = ['noise']
-
-obs = m.single_parameter(t_params)
-obs_stats = s.calc([obs])
-
-print(g)
-print(obs)
-
-# #Hyper-parameters/inference set up here
-
-# #seed for inference
-seed_inf = 1
-
-# #summary statistics parameters????
-
-# #training
-
-n_processes = 10 
-
-pilot_samples = 10
-
-# #training schedules
-n_train = 10
-n_rounds = 4
-
-# #fitting schedule
-minibatch = 5
-epochs = 10
-val_frac = 0.05
-
-# #network setup
-
-n_hiddens = [50,50]
-
-# #convenience 
-
-prior_norm = True
-
-# #MAF parameters
-density = 'maf'
-n_mades = 5
-
-import delfi.inference as infer
-#
-
-#Fixed the environemtn issues.. needed to install certain g++ tools and install conda/set up pathways in order to make it run
-
-# inference object
-
-# Error is being generated here
-res = infer.SNPEC(g,
-                obs=obs_stats,
-                n_hiddens=n_hiddens,
-                seed=seed_inf,
-                pilot_samples=pilot_samples,
-                n_mades=n_mades,
-                prior_norm=prior_norm,
-                density=density)
+posterior_sample = posterior.sample((1,),
+                                        x = observable_baseline_stats).numpy()
 
 
 
-log, _, posterior = res.run(
-                    n_train=n_train,
-                    n_rounds=n_rounds,
-                    minibatch=minibatch,
-                    epochs=epochs,
-                    silent_fail=False,
-                    proposal='prior',
-                    val_frac=val_frac,
-                    verbose=True,)
+#Plot Observed and Posterior
 
+fig = plt.figure(figsize=(12,10))
 
-#plotting of the loss function
-fig = plt.figure(figsize=(15,5))
+gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
+ax = plt.subplot(gs[0])
 
-plt.plot(log[0]['loss'],lw=2)
-plt.xlabel('iteration')
-plt.ylabel('loss');
+#x is simulation of Posterior
+x = simulator(posterior_sample)
+t = baseline_simulator['time']
 
+plt.plot(t, baseline_simulator['traces'], '-r' ,lw=2, label='observation')
+plt.plot(t, x['traces'], '--', lw=2, label='posterior sample')
 
+plt.xlabel('time (ms)')
+plt.ylabel('voltage (mV)')
 
+ax = plt.gca()
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
+          loc='upper right')
 
+plt.legend()
+plt.show()
 
+print(posterior_sample)
