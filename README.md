@@ -1,5 +1,11 @@
 # bayesian_parameter_estimation
 
-~Currently in the works... only initial single cell model has been pushed
+~Currently in the works... 
 
-The objective is to implement the Delfi package distribution with NetPyNE to give a better paramter optimization algorithm
+The objective is to implement the SBI/Delfi package distribution with NetPyNE to give a better paramter optimization algorithm
+
+For Outputs:
+
+Red Solid Line = Ground Truth Simulation
+
+Blue Dashed Line = Posterior Sample Simulation
