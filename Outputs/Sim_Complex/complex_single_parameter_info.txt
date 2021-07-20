@@ -1,0 +1,18 @@
+Single-Round Inference 
+
+
+Network: 6 Populations with 15 Cells each
+
+Number of Simulations:2500
+
+Number of Workers = 8
+
+True Parameters:
+[0.1,0.1,0.005,0.4,0.001]
+
+Posterior Parameters:
+
+[0.11115246 0.09325258 0.00552378 0.3759731  0.00074641]
+
+
+Program took 2324.6924316883087 seconds to run

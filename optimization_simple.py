@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 from sbi import utils as utils
 from sbi import analysis as analysis
 from sbi.inference.base import infer
+import time
+
+
+start_time = time.time()
 
 #NetPyNE simulator
 def simulator(params):
@@ -46,47 +50,71 @@ observable_baseline_stats = torch.as_tensor(baseline_simulator['stats'])
 
 #Inference
 
-
 prior_min = np.array([0.01, 0.001, 1])
 prior_max = np.array([0.5, 0.1, 20])
 
+#Unifrom Distribution setup 
 prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), 
                                     high=torch.as_tensor(prior_max))
 
-posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                  num_simulations=5000, num_workers=16)
+#Choose the option of running single-round or multi-round inference
+inference_type = 'single'
 
+if inference_type == 'single':
+    posterior = infer(simulation_wrapper, prior, method='SNPE', 
+                    num_simulations=2500, num_workers=8)
+    samples = posterior.sample((10000,),
+                                x = observable_baseline_stats)
+    posterior_sample = posterior.sample((1,),
+                                            x = observable_baseline_stats).numpy()
 
-samples = posterior.sample((10000,),
-                            x = observable_baseline_stats)
+elif inference_type == 'multi':
+    #Number of rounds that you want to run your inference
+    num_rounds = 4
+    #Driver for the multi-rounds inference
+    for _ in range(num_rounds):
+        posterior = infer(simulation_wrapper, prior, method='SNPE', 
+                    num_simulations=2500, num_workers=8)
+        prior = posterior.set_default_x(observable_baseline_stats)
+        samples = posterior.sample((10000,), x = observable_baseline_stats)
 
+    posterior_sample = posterior.sample((1,),
+                        x = observable_baseline_stats).numpy()
+else:
+    print('Wrong Input for Inference Type')
 
-posterior_sample = posterior.sample((1,),
-                                        x = observable_baseline_stats).numpy()
-
-#posterior prints a list within a list so when using it to simulate again, use the index 0 so that the above
-#can calibrate it right
-
-#Plot Observed and Posterior
+# Plot Observed and Posterior
 x = simulator(posterior_sample[0])
 t = baseline_simulator['time']
-print(posterior_sample[0])
 
-plt.figure(1, figsize=(12,10))
+print('Posterior Sample:', posterior_sample[0])
 
-# gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
-# ax = plt.subplot(gs[0])
+plt.figure(1, figsize=(16,14))
 
-#x is simulation of Posterior
-
+gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
+ax = plt.subplot(gs[0])
 
 plt.plot(t, baseline_simulator['traces'], '-r' ,lw=2, label='observation')
 plt.plot(t, x['traces'], '--', lw=2, label='posterior sample')
 plt.xlabel('time (ms)')
 plt.ylabel('voltage (mV)')
+plt.title('Complex Network')
 
-plt.show()
-# ax = plt.gca()
-# handles, labels = ax.get_legend_handles_labels()
-# ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
-#           loc='upper right')
+ax = plt.gca()
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
+          loc='upper right')
+plt.legend()
+plt.savefig('observation_vs_posterior.png')
+
+
+
+plt.figure(2)
+_ = analysis.pairplot(samples, limits=[[0.0,0.5],[0.0,0.12],[0,21]], 
+                   figsize=(16,14))  
+
+plt.legend()
+plt.savefig('PairPlot.png')
+
+print("Program took", time.time() - start_time, "seconds to run")
+#Next step is to plot either the distribution or the likelihood estimator

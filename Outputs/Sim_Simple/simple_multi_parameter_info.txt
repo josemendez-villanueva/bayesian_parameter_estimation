@@ -1,0 +1,18 @@
+Multi-Round Inference 
+
+Network: 2 Populations with 20 Cells each
+
+Number of Simulations:2500
+
+Number of Workers = 8
+
+Rounds = 4
+
+True Parameters:
+[0.2, 0.025, 2]
+
+Posterior Parameters:
+
+[0.19834867 0.02499941 2.0032]
+
+Program took 1563.7094378471375 seconds to run
