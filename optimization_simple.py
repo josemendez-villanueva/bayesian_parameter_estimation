@@ -51,7 +51,9 @@ observable_baseline_stats = torch.as_tensor(baseline_simulator['stats'])
 #Inference
 
 prior_min = np.array([0.01, 0.001, 1])
-prior_max = np.array([0.5, 0.1, 20])
+prior_max = np.array([5, 3, 200])
+
+# prior_max = np.array([0.5, 0.1, 20])
 
 #Unifrom Distribution setup 
 prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), 
@@ -62,7 +64,7 @@ inference_type = 'single'
 
 if inference_type == 'single':
     posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=2500, num_workers=8)
+                    num_simulations=1000, num_workers=64)
     samples = posterior.sample((10000,),
                                 x = observable_baseline_stats)
     posterior_sample = posterior.sample((1,),
@@ -74,7 +76,7 @@ elif inference_type == 'multi':
     #Driver for the multi-rounds inference
     for _ in range(num_rounds):
         posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=2500, num_workers=8)
+                    num_simulations=2500, num_workers=64)
         prior = posterior.set_default_x(observable_baseline_stats)
         samples = posterior.sample((10000,), x = observable_baseline_stats)
 
@@ -88,6 +90,10 @@ x = simulator(posterior_sample[0])
 t = baseline_simulator['time']
 
 print('Posterior Sample:', posterior_sample[0])
+
+
+MAPE = np.round(np.sum(np.abs(np.divide(np.subtract(baseline_simulator['traces'],x['traces']), baseline_simulator['traces']))),5)*(100/len(baseline_simulator['traces']))
+print('Mean Absolute Percent Error of PlotTraces:', MAPE)
 
 plt.figure(1, figsize=(16,14))
 
@@ -108,9 +114,8 @@ plt.legend()
 plt.savefig('observation_vs_posterior.png')
 
 
-
 plt.figure(2)
-_ = analysis.pairplot(samples, limits=[[0.0,0.5],[0.0,0.12],[0,21]], 
+_ = analysis.pairplot(samples, limits=[[0.15,0.25],[0.015,0.030],[1,3]], 
                    figsize=(16,14))  
 
 plt.legend()
