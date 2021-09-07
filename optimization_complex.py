@@ -57,7 +57,7 @@ inference_type = 'single'
 
 if inference_type == 'single':
     posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=5000, num_workers=48)
+                    num_simulations=10000, num_workers=56)
     samples = posterior.sample((10000,),
                                 x = observable_baseline_stats)
     posterior_sample = posterior.sample((1,),
