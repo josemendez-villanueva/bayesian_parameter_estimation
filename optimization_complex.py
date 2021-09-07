@@ -57,7 +57,7 @@ inference_type = 'single'
 
 if inference_type == 'single':
     posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=2500, num_workers=8)
+                    num_simulations=2500, num_workers=48)
     samples = posterior.sample((10000,),
                                 x = observable_baseline_stats)
     posterior_sample = posterior.sample((1,),
@@ -69,7 +69,7 @@ elif inference_type == 'multi':
     #Driver for the multi-rounds inference
     for _ in range(num_rounds):
         posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=2500, num_workers=8)
+                    num_simulations=2500, num_workers=48)
         prior = posterior.set_default_x(observable_baseline_stats)
         samples = posterior.sample((10000,), x = observable_baseline_stats)
 
