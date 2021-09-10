@@ -53,7 +53,7 @@ prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min),
                                     high=torch.as_tensor(prior_max))
 
 #Choose the option of running single-round or multi-round inference
-inference_type = 'single'
+inference_type = 'multi'
 
 if inference_type == 'single':
     posterior = infer(simulation_wrapper, prior, method='SNPE', 
@@ -69,7 +69,7 @@ elif inference_type == 'multi':
     #Driver for the multi-rounds inference
     for _ in range(num_rounds):
         posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=2500, num_workers=48)
+                    num_simulations=10000, num_workers=56)
         prior = posterior.set_default_x(observable_baseline_stats)
         samples = posterior.sample((10000,), x = observable_baseline_stats)
 
@@ -111,3 +111,15 @@ plt.savefig('PairPlot.png')
 
 print("Program took", time.time() - start_time, "seconds to run")
 
+
+
+import json
+
+output_values = {}
+output_values['approximated'] = posterior_sample[0]
+output_values['true_parameters'] = baseline_param
+
+with open('output_values.txt', 'w') as outfile:
+    json.dump(output_values, outfile)
+
+    
