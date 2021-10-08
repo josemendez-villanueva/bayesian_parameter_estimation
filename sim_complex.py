@@ -6,7 +6,7 @@ netParams = specs.NetParams()
 cfg = specs.SimConfig()
 
 
-param = np.array([0,0,0,0,0])
+param = np.array([0,0,0,0,0, 0])
 
 netParams.sizeX = 100 # x-dimension (horizontal length) size in um
 netParams.sizeY = 1000 # y-dimension (vertical height or cortical depth) size in um
@@ -28,13 +28,14 @@ netParams.cellParams['I'] = {
             'mechs': {'hh': {'gnabar': 0.11, 'gkbar': 0.036, 'gl': 0.003, 'el': -70}}}}}
 
 #Population parameters
-pop = 50
+pop = 5
 netParams.popParams['E2'] = {'cellType': 'E', 'numCells': pop, 'yRange': [100,300], 'cellModel': 'HH'}
 netParams.popParams['I2'] = {'cellType': 'I', 'numCells': pop, 'yRange': [100,300], 'cellModel': 'HH'}
 netParams.popParams['E4'] = {'cellType': 'E', 'numCells': pop, 'yRange': [300,600], 'cellModel': 'HH'}
 netParams.popParams['I4'] = {'cellType': 'I', 'numCells': pop, 'yRange': [300,600], 'cellModel': 'HH'}
 netParams.popParams['E5'] = {'cellType': 'E', 'numCells': pop, 'ynormRange': [0.6,1.0], 'cellModel': 'HH'}
 netParams.popParams['I5'] = {'cellType': 'I', 'numCells': pop, 'ynormRange': [0.6,1.0], 'cellModel': 'HH'}
+
 
 
 # Synaptic mechanism parameters
@@ -62,6 +63,14 @@ netParams.connParams['I->E'] = {
 	  'delay': 0.8,                      # transmission delay (ms)
 	  'synMech': 'inh'}     
 
+netParams.connParams['E->I'] = {
+	  'preConds': {'cellType': 'E'}, 'postConds': {'pop': ['I2','I4','I5']},       #  E -> I
+	  'probability': 0.8,   # probability of connection
+	  'weight': param[5],                                      # synaptic weight
+	  'delay': 0.8,                      # transmission delay (ms)
+	  'synMech': 'exc'}     
+
+
 
 # Create the recoding of data/simulation/plotting
 
@@ -72,12 +81,12 @@ cfg.recordTraces = {'V_soma':{'sec':'soma','loc':0.5,'var':'v'}}  # Dict with tr
 cfg.recordStep = 0.1        # Step size in ms to save data (eg. V traces, LFP, etc      
 cfg.saveFolder = 'output_folder'
 cfg.filename = 'output'
-cfg.saveDataInclude = ['simData', 'simConfig', 'netParams', 'net']
-cfg.saveJson = False
-cfg.printPopAvgRates = False
+cfg.saveDataInclude = ['simConfig', 'netParams','simData', 'net']
+cfg.saveJson = True
+cfg.printPopAvgRates = True
 
 
 cfg.analysis['plotTraces'] = {'include': [0], 'saveFig': False}  # Plot recorded traces for this list of cells
-
+cfg.analysis['plotRaster'] = {'popRates': True, 'saveFig': True}
 def run():
     sim.createSimulateAnalyze(netParams = netParams, simConfig = cfg)
