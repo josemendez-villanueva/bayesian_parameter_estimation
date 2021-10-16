@@ -6,7 +6,7 @@ netParams = specs.NetParams()
 cfg = specs.SimConfig()
 
 
-param = np.array([0,0,0,0,0, 0])
+param = np.array([0,0,0,0,0,0])
 
 netParams.sizeX = 100 # x-dimension (horizontal length) size in um
 netParams.sizeY = 1000 # y-dimension (vertical height or cortical depth) size in um
@@ -28,7 +28,7 @@ netParams.cellParams['I'] = {
             'mechs': {'hh': {'gnabar': 0.11, 'gkbar': 0.036, 'gl': 0.003, 'el': -70}}}}}
 
 #Population parameters
-pop = 5
+pop = 10
 netParams.popParams['E2'] = {'cellType': 'E', 'numCells': pop, 'yRange': [100,300], 'cellModel': 'HH'}
 netParams.popParams['I2'] = {'cellType': 'I', 'numCells': pop, 'yRange': [100,300], 'cellModel': 'HH'}
 netParams.popParams['E4'] = {'cellType': 'E', 'numCells': pop, 'yRange': [300,600], 'cellModel': 'HH'}
