@@ -82,7 +82,7 @@ cfg.recordStep = 0.1        # Step size in ms to save data (eg. V traces, LFP, e
 cfg.saveFolder = 'output_folder'
 cfg.filename = 'output'
 cfg.saveDataInclude = ['simConfig', 'netParams','simData', 'net']
-cfg.saveJson = True
+cfg.saveJson = False
 cfg.printPopAvgRates = True
 
 

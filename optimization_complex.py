@@ -98,7 +98,7 @@ elif inference_type == 'multi':
         posterior = infer(simulation_wrapper, prior, method='SNLE', 
                     num_simulations=10000, num_workers=56)
         prior = posterior.set_default_x(observable_baseline_stats)
-        samples = posterior.sample((10000,), x = observable_baseline_stats)
+        samples = posterior.sample((15000,), x = observable_baseline_stats)
 
     posterior_sample = posterior.sample((1,),
                         x = observable_baseline_stats).numpy()
@@ -120,28 +120,28 @@ t = x['time']
 print('Posterior Sample Param:', op_param)
 print('Pop Rate Estimates:', x['pop'])
 
-plt.figure(1, figsize=(16,14))
+# plt.figure(1, figsize=(16,14))
 
-gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
-ax = plt.subplot(gs[0])
+# gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
+# ax = plt.subplot(gs[0])
 
-plt.plot(t, x['traces'], '--', lw=2, label='posterior sample')
-plt.xlabel('time (ms)')
-plt.ylabel('voltage (mV)')
-plt.title('Complex Network')
+# plt.plot(t, x['traces'], '--', lw=2, label='posterior sample')
+# plt.xlabel('time (ms)')
+# plt.ylabel('voltage (mV)')
+# plt.title('Complex Network')
 
-ax = plt.gca()
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
-          loc='upper right')
-plt.legend()
-plt.savefig('observation_vs_posterior.png')
+# ax = plt.gca()
+# handles, labels = ax.get_legend_handles_labels()
+# ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.3, 1), 
+#           loc='upper right')
+# plt.legend()
+# plt.savefig('observation_vs_posterior.png')
 
-plt.figure(2)
-_ = analysis.pairplot(samples, limits=[[0.0,0.4],[0.0,0.4],[0.0,0.01],[0,1.0],[0.0,0.01], [0.0,0.01]], 
-                   figsize=(16,14))  
+# plt.figure(2)
+# _ = analysis.pairplot(samples, limits=[[0.0,0.4],[0.0,0.4],[0.0,0.01],[0,1.0],[0.0,0.01], [0.0,0.01]], 
+#                    figsize=(16,14))  
 
-plt.legend()
-plt.savefig('PairPlot.png')
+# plt.legend()
+# plt.savefig('PairPlot.png')
 
-print("Program took", time.time() - start_time, "seconds to run")
+# print("Program took", time.time() - start_time, "seconds to run")
