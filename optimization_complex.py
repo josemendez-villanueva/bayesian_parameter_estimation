@@ -13,6 +13,11 @@ from sbi import analysis as analysis
 from sbi.inference.base import infer
 from sbi.analysis.plot import pairplot
 
+
+from sbi.inference import SNPE, prepare_for_sbi, simulate_for_sbi
+from sbi.utils.get_nn_models import posterior_nn
+from sbi import analysis as analysis
+
 start_time = time.time()
 
 #NetPyNE simulator
@@ -98,10 +103,11 @@ elif inference_type == 'multi':
         posterior = infer(simulation_wrapper, prior, method='SNLE', 
                     num_simulations=10000, num_workers=56)
         prior = posterior.set_default_x(observable_baseline_stats)
-        samples = posterior.sample((15000,), x = observable_baseline_stats)
+        samples = posterior.sample((10000,), x = observable_baseline_stats)
 
     posterior_sample = posterior.sample((1,),
                         x = observable_baseline_stats).numpy()
+
 else:
     print('Wrong Input for Inference Type')
 
@@ -119,7 +125,7 @@ t = x['time']
 
 print('Posterior Sample Param:', op_param)
 print('Pop Rate Estimates:', x['pop'])
-
+)
 # plt.figure(1, figsize=(16,14))
 
 # gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
