@@ -125,7 +125,6 @@ t = x['time']
 
 print('Posterior Sample Param:', op_param)
 print('Pop Rate Estimates:', x['pop'])
-)
 # plt.figure(1, figsize=(16,14))
 
 # gs = mpl.gridspec.GridSpec(2,1,height_ratios=[4,1])
