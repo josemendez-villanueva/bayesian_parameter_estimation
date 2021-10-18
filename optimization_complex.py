@@ -100,7 +100,7 @@ elif inference_type == 'multi':
     num_rounds = 2
     #Driver for the multi-rounds inference
     for _ in range(num_rounds):
-        posterior = infer(simulation_wrapper, prior, method='SNLE', 
+        posterior = infer(simulation_wrapper, prior, method='SNPE', 
                     num_simulations=10000, num_workers=56)
         prior = posterior.set_default_x(observable_baseline_stats)
         samples = posterior.sample((10000,), x = observable_baseline_stats)
