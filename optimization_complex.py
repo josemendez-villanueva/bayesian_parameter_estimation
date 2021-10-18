@@ -88,7 +88,7 @@ prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min),
 inference_type = 'single'
 
 if inference_type == 'single':
-    posterior = infer(simulation_wrapper, prior, method='SNLE', 
+    posterior = infer(simulation_wrapper, prior, method='SNPE', 
                     num_simulations=15000, num_workers=8)
     samples = posterior.sample((10000,),
                                 x = observable_baseline_stats)
