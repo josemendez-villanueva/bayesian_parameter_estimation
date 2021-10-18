@@ -78,7 +78,7 @@ observable_baseline_stats = torch.as_tensor(np.histogram(pop_target, b)[0])
 
 #Prior distribution Setup
 prior_min = np.array([0.05, 0.05, 0.001,0.2, 0.0005, 0.0005])
-prior_max = np.array([0.5, 0.5, 0.1, 0.8, 0.2, 0.2])
+prior_max = np.array([0.2, 0.2, 0.007, 0.6, 0.002, 0.002])
 
 #Unifrom Distribution setup 
 prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), 
