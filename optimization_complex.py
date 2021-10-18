@@ -78,18 +78,18 @@ observable_baseline_stats = torch.as_tensor(np.histogram(pop_target, b)[0])
 
 #Prior distribution Setup
 prior_min = np.array([0.05, 0.05, 0.001,0.2, 0.0005, 0.0005])
-prior_max = np.array([0.2, 0.2, 0.007, 0.6, 0.002, 0.002])
+prior_max = np.array([0.5, 0.5, 0.1, 0.8, 0.2, 0.2])
 
 #Unifrom Distribution setup 
 prior = utils.torchutils.BoxUniform(low=torch.as_tensor(prior_min), 
                                     high=torch.as_tensor(prior_max))
 
 #Choose the option of running single-round or multi-round inference
-inference_type = 'multi'
+inference_type = 'single'
 
 if inference_type == 'single':
-    posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=1000, num_workers=8)
+    posterior = infer(simulation_wrapper, prior, method='SNLE', 
+                    num_simulations=15000, num_workers=8)
     samples = posterior.sample((10000,),
                                 x = observable_baseline_stats)
     posterior_sample = posterior.sample((1,),
@@ -101,7 +101,7 @@ elif inference_type == 'multi':
     #Driver for the multi-rounds inference
     for _ in range(num_rounds):
         posterior = infer(simulation_wrapper, prior, method='SNPE', 
-                    num_simulations=10000, num_workers=56)
+                    num_simulations=15000, num_workers=56)
         prior = posterior.set_default_x(observable_baseline_stats)
         samples = posterior.sample((10000,), x = observable_baseline_stats)
 
