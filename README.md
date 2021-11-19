@@ -1,6 +1,6 @@
 # bayesian_parameter_estimation
 
-~Currently in the works... 
+~Currently in the works for Dummy networks/cells... 
 
 The objective is to implement the SBI/Delfi package distribution with NetPyNE to give a better paramter optimization algorithm
 
